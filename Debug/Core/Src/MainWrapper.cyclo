@@ -1,0 +1,22 @@
+../Core/Inc/Utils.h:26:2:Pin::Pin(GPIO_TypeDef*, uint16_t)	1
+../Core/Inc/Utils.h:46:2:Pin::Pin(GPIO_TypeDef*, uint16_t, GPIO_Default_State, bool)	1
+../Core/Inc/Utils.h:54:7:void Pin::Write(GPIO_PinState)	2
+../Core/Inc/Utils.h:61:7:void Pin::Write(bool)	1
+../Core/Inc/Utils.h:64:16:GPIO_PinState Pin::Read()	2
+../Core/Inc/Utils.h:71:7:bool Pin::Read(int&&)	2
+../Core/Inc/AP33772Driver.h:20:2:AP33772Driver::AP33772Driver()	1
+../Core/Inc/AP33772Driver.h:41:7:bool AP33772Driver::GetVoltageMismatch()	1
+../Core/Src/MainWrapper.cpp:57:6:void OverTempCheck()	6
+../Core/Src/MainWrapper.cpp:75:6:void UsbReceiveCallback(uint8_t*, uint32_t*)	1
+../Core/Src/MainWrapper.cpp:80:6:void StartDebounce()	1
+../Core/Src/MainWrapper.cpp:87:6:void CalcOverTempDerate()	4
+../Core/Src/MainWrapper.cpp:96:6:void ControlLighting()	5
+../Core/Src/MainWrapper.cpp:118:6:void ADCConvCallback()	1
+../Core/Src/MainWrapper.cpp:123:6:void ExtInterruptCallback(uint16_t)	5
+../Core/Src/MainWrapper.cpp:143:6:void TimerElapsedCallback(TIM_HandleTypeDef*)	3
+../Core/Inc/AP33772Driver.h:17:7:constexpr AP33772Driver& AP33772Driver::operator=(const AP33772Driver&)	1
+../Core/Src/MainWrapper.cpp:153:19:HAL_StatusTypeDef Init(ADC_HandleTypeDef*, TIM_HandleTypeDef*, TIM_HandleTypeDef*, TIM_HandleTypeDef*, TIM_HandleTypeDef*, I2C_HandleTypeDef*)	6
+../Core/Src/MainWrapper.cpp:216:6:void Main()	4
+../Core/Src/MainWrapper.cpp:243:1:void __static_initialization_and_destruction_0(int, int)	5
+../Core/Src/MainWrapper.cpp:243:1:cpp)	1
+../Core/Src/MainWrapper.cpp:243:1:cpp)	1

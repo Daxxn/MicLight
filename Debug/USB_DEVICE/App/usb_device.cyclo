@@ -1,0 +1,5 @@
+../USB_DEVICE/App/usb_device.c:57:6:RegisterUSBReceiveCallback	1
+../USB_DEVICE/App/usb_device.c:62:21:GetUSBHandle	1
+../USB_DEVICE/App/usb_device.c:67:6:UsbReceivedData	2
+../USB_DEVICE/App/usb_device.c:74:6:UsbTransmitData	1
+../USB_DEVICE/App/usb_device.c:84:6:MX_USB_DEVICE_Init	5
