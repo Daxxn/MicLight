@@ -16,4 +16,4 @@ The [MCU](./Docs/Datasheets/STM32F072.pdf) has a full USB stack and is able to c
 
 ### PCB Design File:
 
-This board was designed when I was still using Altium Designer. I don't have the project file anymore. The schematic and gerber files are the best I got. The next revision will have a full KiCAD project file.
+This board was designed when I was still using Altium Designer. I don't have the project file anymore. The [Schematic](./Docs/MicLight_Schematic_REV5.pdf) and gerber files are the best I got. The next revision will have a full KiCAD project file.
