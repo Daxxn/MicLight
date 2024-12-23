@@ -91,7 +91,6 @@ void Error_Handler(void);
 #define I2C_INT_EXTI_IRQn EXTI4_15_IRQn
 #define USB_FAULT_Pin GPIO_PIN_15
 #define USB_FAULT_GPIO_Port GPIOB
-#define USB_FAULT_EXTI_IRQn EXTI4_15_IRQn
 #define MAX_BRIGHT_Pin GPIO_PIN_9
 #define MAX_BRIGHT_GPIO_Port GPIOA
 #define MAX_BRIGHT_EXTI_IRQn EXTI4_15_IRQn
@@ -101,7 +100,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define OVERTEMP_DEFAULT 56
 #define SHUTDOWN_TEMP_DEFAULT 80
-#define NORMAL_TEMP_DEFAULT 38
+#define NORMAL_TEMP_DEFAULT 40
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

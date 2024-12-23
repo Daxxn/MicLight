@@ -1,7 +1,0 @@
-../Core/Src/LightingControl.cpp:14:6:void SetPWM(uint8_t, uint16_t)	4
-../Core/Src/LightingControl.cpp:26:19:HAL_StatusTypeDef InitLighting(PWMPin*)	3
-../Core/Src/LightingControl.cpp:38:6:void DeInitLighting()	2
-../Core/Src/LightingControl.cpp:46:6:void LightsOff()	1
-../Core/Src/LightingControl.cpp:51:6:void SetLight(uint8_t, uint16_t)	1
-../Core/Src/LightingControl.cpp:57:6:void SetAllLights(uint16_t)	2
-../Core/Src/LightingControl.cpp:64:6:void SetMaxBrightness()	1

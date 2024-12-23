@@ -56,7 +56,8 @@
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
- typedef void (*UsbDataReceivedCallback) (uint8_t *buffer, uint32_t *len);
+typedef void (*UsbDataReceivedCallback) (uint8_t *buffer, uint32_t *len);
+struct _USBD_HandleTypeDef* GetUSBHandle(void);
 /* USER CODE END PFP */
 
 /*

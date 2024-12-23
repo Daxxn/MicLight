@@ -59,6 +59,8 @@ extern PCD_HandleTypeDef hpcd_USB_FS;
 extern I2C_HandleTypeDef hi2c2;
 extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim15;
+extern TIM_HandleTypeDef htim16;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -154,7 +156,6 @@ void EXTI4_15_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(MAX_BRIGHT_Pin);
   HAL_GPIO_EXTI_IRQHandler(ENABLE_Pin);
   HAL_GPIO_EXTI_IRQHandler(I2C_INT_Pin);
-  HAL_GPIO_EXTI_IRQHandler(USB_FAULT_Pin);
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
   /* USER CODE END EXTI4_15_IRQn 1 */
@@ -189,6 +190,34 @@ void TIM14_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles TIM15 global interrupt.
+  */
+void TIM15_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM15_IRQn 0 */
+
+  /* USER CODE END TIM15_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim15);
+  /* USER CODE BEGIN TIM15_IRQn 1 */
+
+  /* USER CODE END TIM15_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM16 global interrupt.
+  */
+void TIM16_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM16_IRQn 0 */
+
+  /* USER CODE END TIM16_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim16);
+  /* USER CODE BEGIN TIM16_IRQn 1 */
+
+  /* USER CODE END TIM16_IRQn 1 */
+}
+
+/**
   * @brief This function handles I2C2 global interrupt.
   */
 void I2C2_IRQHandler(void)
@@ -196,9 +225,12 @@ void I2C2_IRQHandler(void)
   /* USER CODE BEGIN I2C2_IRQn 0 */
 
   /* USER CODE END I2C2_IRQn 0 */
-  if (hi2c2.Instance->ISR & (I2C_FLAG_BERR | I2C_FLAG_ARLO | I2C_FLAG_OVR)) {
+  if (hi2c2.Instance->ISR & (I2C_FLAG_BERR | I2C_FLAG_ARLO | I2C_FLAG_OVR))
+  {
     HAL_I2C_ER_IRQHandler(&hi2c2);
-  } else {
+  }
+  else
+  {
     HAL_I2C_EV_IRQHandler(&hi2c2);
   }
   /* USER CODE BEGIN I2C2_IRQn 1 */

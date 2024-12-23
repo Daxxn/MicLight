@@ -6,113 +6,72 @@
  */
 
 #include "main.h"
-#include "Utils.h"
-#include "LightingControl.h"
+#include "Pins.h"
+#include "LightingManager.h"
 #include "usb_device.h"
 #include "AP33772Driver.h"
+#include "UsbManager.h"
 
+// Peripheral Handle Pointers:
 ADC_HandleTypeDef *h_adc;
-
 TIM_HandleTypeDef *h_tim2;
 TIM_HandleTypeDef *h_tim3;
 TIM_HandleTypeDef *h_tim_debounce;
 TIM_HandleTypeDef *h_tim_temp;
-
+TIM_HandleTypeDef *h_tim_rdData;
+TIM_HandleTypeDef *h_tim_pwrFault;
 I2C_HandleTypeDef *h_i2c;
-
 PCD_HandleTypeDef *h_usb;
 
+// Private Variables:
 PWMPin pins[LED_COUNT] = {};
 
 AP33772Driver pwrDriver;
+LightingManager lighting;
+UsbManager usb;
 
 uint16_t potPosition = 0;
 uint8_t pcbTemp = 0;
-uint8_t overTempValue = OVERTEMP_DEFAULT;
+uint8_t overTempValue = LED_DEFAULT_MAX_TEMP;
 uint8_t normTempValue = NORMAL_TEMP_DEFAULT;
 
+typedef struct {
+	Pin enable;
+	Pin maxBright;
+} ControlPins;
+ControlPins ctrlPins;
 //Pin enablePin = Pin(ENABLE_GPIO_Port, ENABLE_Pin, ACTIVE_LOW, false);
-Pin maxBrightPin = Pin(MAX_BRIGHT_GPIO_Port, MAX_BRIGHT_Pin, ACTIVE_LOW, false);
-Pin maxBrightIndPin = Pin(MAX_BRIGHT_IND_GPIO_Port, MAX_BRIGHT_IND_Pin);
-Pin statusIndPin = Pin(STATUS_IND_GPIO_Port, STATUS_IND_Pin);
-Pin underPwrPin = Pin(UNDER_PWR_IND_GPIO_Port, UNDER_PWR_IND_Pin);
-
-bool lightsEnable = false;
-bool maxBrightEnable = false;
+LightingIndicators indPins;
+//Pin maxBrightPin = Pin(MAX_BRIGHT_GPIO_Port, MAX_BRIGHT_Pin, ACTIVE_LOW, false);
+//Pin maxBrightIndPin = Pin(MAX_BRIGHT_IND_GPIO_Port, MAX_BRIGHT_IND_Pin);
+//Pin statusIndPin = Pin(STATUS_IND_GPIO_Port, STATUS_IND_Pin);
+//Pin underPwrPin = Pin(UNDER_PWR_IND_GPIO_Port, UNDER_PWR_IND_Pin);
 
 bool debounce = false;
 bool checkTemp = false;
-bool overTemp = false;
-bool derateTemp = false;
+bool readData = false;
+bool startup = true;
+//bool overTemp = false;
+//bool derateTemp = false;
 
-double temp = 0;
+//double temp = 0;
 
 AP33772_PDRequestObject desiredPDO = {
-		.maxCurrent = 2.8,
+		.maxCurrent = 2.2,
 		.current = 2,
 		.voltage = 12,
-		.pdoType = AP33772_FIXED_PDO,
+		.pdoType = AP33772_ANY_PDO,
 };
 
-void OverTempCheck()
-{
-	pcbTemp = pwrDriver.GetMeasuredValues()->temp;
-	if (!lightsEnable) return;
-	if (pcbTemp > normTempValue) {
-		derateTemp = true;
-	} else {
-		derateTemp = false;
-	}
-	if (pcbTemp > overTempValue) {
-		overTemp = true;
-		derateTemp = false;
-	}
-	if (overTemp && pcbTemp < normTempValue) {
-		overTemp = false;
-	}
-}
+// private Function Definitions:
+static void InitPins();
+static HAL_StatusTypeDef InitPower();
+
+// Callback Functions:
 
 void UsbReceiveCallback(uint8_t *buffer, uint32_t *len)
 {
-//	usbManager.UsbReceivedCallback(buffer, len);
-}
-
-void StartDebounce()
-{
-	debounce = true;
-	HAL_TIM_Base_Start_IT(h_tim_debounce);
-}
-
-// Not sure how well this will work.
-void CalcOverTempDerate()
-{
-	double tempOffset = (pcbTemp - normTempValue) / overTempValue;
-	if (tempOffset < 0) return;
-	temp -= tempOffset;
-	if (temp < 0) temp = 0;
-	else if (temp > 1) temp = 1;
-}
-
-void ControlLighting()
-{
-	if (!lightsEnable) {
-		SetAllLights(0);
-		return;
-	}
-
-	if (maxBrightEnable) {
-		SetMaxBrightness();
-		return;
-	}
-
-	temp = (double)potPosition / UINT12_MAXF;
-	if (overTemp) {
-		temp = temp / 0.8;
-	} else if (derateTemp) {
-		CalcOverTempDerate();
-	}
-	SetAllLights((uint16_t)(temp * UINT16_MAX));
-
+	usb.ReceivedCallback(buffer, len);
 }
 
 void ADCConvCallback()
@@ -124,17 +83,22 @@ void ExtInterruptCallback(uint16_t pin)
 {
 	switch (pin) {
 		case ENABLE_Pin:
-			lightsEnable = !lightsEnable;
-//			if (!debounce) {
-//				lightsEnable = !lightsEnable;
-//				StartDebounce();
-//			}
+			if (startup) {
+				lighting.LightsOFF();
+				return;
+			}
+			lighting.LightsToggle();
+			break;
+		case MAX_BRIGHT_Pin:
+			if (startup) return;
+			lighting.ToggleMaxBrightness();
 			break;
 		case I2C_INT_Pin:
-			pwrDriver.HandleInterrupt();
-		case USB_OVER_VOLT_Pin:
-			lightsEnable = false;
+			lighting.StatusInterrupt();
 			break;
+//		case USB_OVER_VOLT_Pin:
+//			lightsEnable = false;
+//			break;
 		default:
 			break;
 	}
@@ -148,7 +112,14 @@ void TimerElapsedCallback(TIM_HandleTypeDef *htim)
 	else if (htim == h_tim_temp) {
 		checkTemp = true;
 	}
+	else if (htim == h_tim_rdData) {
+		readData = true;
+	}
 }
+//static void OverTempCheck();
+//static void StartDebounce();
+//static void CalcOverTempDerate();
+//static void ControlLighting();
 
 HAL_StatusTypeDef Init(
 		ADC_HandleTypeDef *hadc,
@@ -156,6 +127,8 @@ HAL_StatusTypeDef Init(
 		TIM_HandleTypeDef *htim3,
 		TIM_HandleTypeDef *htim7,
 		TIM_HandleTypeDef *htim14,
+		TIM_HandleTypeDef *htim15,
+		TIM_HandleTypeDef *htim16,
 		I2C_HandleTypeDef *hi2c2
 	)
 {
@@ -164,36 +137,100 @@ HAL_StatusTypeDef Init(
 	h_tim3         = htim3;
 	h_tim_debounce = htim7;
 	h_tim_temp     = htim14;
+	h_tim_pwrFault = htim15;
+	h_tim_rdData   = htim16;
 	h_i2c          = hi2c2;
 
-	pwrDriver = AP33772Driver(h_i2c, desiredPDO);
+	RegisterUSBReceiveCallback(UsbReceiveCallback);
 
-	if (pwrDriver.Init() != HAL_OK) {
-		return HAL_ERROR;
-	}
+	InitPins();
+
+	pwrDriver = AP33772Driver(h_i2c, &desiredPDO);
+
+	lighting = LightingManager(&pwrDriver, pins, &indPins, &desiredPDO);
+	lighting.SetMeasurementsPtr(pwrDriver.GetMeasuredValuesPtr());
+
+	usb = UsbManager(GetUSBHandle());
 
 	// Some kind of problem during startup. possibly an issue with the status interrupt?
-	// The MCU needs to be reset for the power setup to work. This delay isnt enough.
-	HAL_Delay(100);
+	// The MCU needs to be reset for the power setup to work.
+	HAL_Delay(2000);
 
-	if (pwrDriver.SendRequestedPDO() != HAL_OK) {
+	if (InitPower() != HAL_OK) {
 		return HAL_ERROR;
 	}
 
-	if (pwrDriver.SetOverTemp(overTempValue) != HAL_OK) {
+	if (lighting.Init() != HAL_OK) {
 		return HAL_ERROR;
 	}
 
-	underPwrPin.Write(pwrDriver.GetVoltageMismatch());
+	if (HAL_TIM_Base_Start_IT(h_tim_temp) != HAL_OK) {
+		return HAL_ERROR;
+	}
 
-	PWMPin ch1 = { .ch = TIM_CHANNEL_4, .handle = h_tim2 };
-	PWMPin ch2 = { .ch = TIM_CHANNEL_1, .handle = h_tim3 };
-	PWMPin ch3 = { .ch = TIM_CHANNEL_2, .handle = h_tim3 };
-	PWMPin ch4 = { .ch = TIM_CHANNEL_3, .handle = h_tim3 };
-	PWMPin ch5 = { .ch = TIM_CHANNEL_4, .handle = h_tim3 };
-	PWMPin ch6 = { .ch = TIM_CHANNEL_1, .handle = h_tim2 };
-	PWMPin ch7 = { .ch = TIM_CHANNEL_2, .handle = h_tim2 };
-	PWMPin ch8 = { .ch = TIM_CHANNEL_3, .handle = h_tim2 };
+	if (HAL_TIM_Base_Start_IT(h_tim_rdData) != HAL_OK) {
+		return HAL_ERROR;
+	}
+
+	if (pwrDriver.SetInterrupts(interruptMask) != HAL_OK) {
+		return HAL_ERROR;
+	}
+
+	startup = false;
+	return HAL_OK;
+}
+
+void Main()
+{
+	if (ctrlPins.maxBright.Read()) {
+		lighting.ToggleMaxBrightness();
+//		if (!debounce) {
+//			maxBrightEnable = !maxBrightEnable;
+//			StartDebounce();
+//		}
+	}
+
+	if (HAL_ADC_Start(h_adc) == HAL_OK) {
+		if (HAL_ADC_PollForConversion(h_adc, 100) == HAL_OK) {
+			lighting.SetPotBrightness((uint16_t)HAL_ADC_GetValue(h_adc));
+//			lighting.SetMcuTemperature((uint16_t)HAL_ADC_GetValue(h_adc));
+		}
+	}
+
+//	if (!lightsEnable) {
+//		lighting.LightsOFF();
+//	}
+
+//	if (maxBrightEnable) {
+//		lighting.ToggleMaxBrightness();
+//		return;
+//	}
+
+//	lighting.SetPotBrightness(potPosition);
+
+	if (checkTemp) {
+//		pwrDriver.GetMeasurements();
+		pwrDriver.GetTemp();
+		checkTemp = false;
+	}
+	if (readData) {
+		pwrDriver.GetMeasurements();
+		readData = false;
+	}
+
+	lighting.Update();
+}
+
+void InitPins()
+{
+	PWMPin ch1 = PWMPin(h_tim2, TIM_CHANNEL_4);
+	PWMPin ch2 = PWMPin(h_tim3, TIM_CHANNEL_1);
+	PWMPin ch3 = PWMPin(h_tim3, TIM_CHANNEL_2);
+	PWMPin ch4 = PWMPin(h_tim3, TIM_CHANNEL_3);
+	PWMPin ch5 = PWMPin(h_tim3, TIM_CHANNEL_4);
+	PWMPin ch6 = PWMPin(h_tim2, TIM_CHANNEL_1);
+	PWMPin ch7 = PWMPin(h_tim2, TIM_CHANNEL_2);
+	PWMPin ch8 = PWMPin(h_tim2, TIM_CHANNEL_3);
 
 	pins[0] = ch1;
 	pins[1] = ch2;
@@ -204,42 +241,103 @@ HAL_StatusTypeDef Init(
 	pins[6] = ch7;
 	pins[7] = ch8;
 
-	if (InitLighting(pins) != HAL_OK) {
-		return HAL_ERROR;
+	indPins.maxBright   = Pin(MAX_BRIGHT_IND_GPIO_Port, MAX_BRIGHT_IND_Pin);
+	indPins.status      = Pin(STATUS_IND_GPIO_Port, STATUS_IND_Pin);
+	indPins.struggleBus = Pin(UNDER_PWR_IND_GPIO_Port, UNDER_PWR_IND_Pin);
+	ctrlPins.enable     = Pin(ENABLE_GPIO_Port, ENABLE_Pin, ACTIVE_LOW, false);
+	ctrlPins.maxBright  = Pin(MAX_BRIGHT_GPIO_Port, MAX_BRIGHT_Pin, ACTIVE_LOW, false);
+}
+
+HAL_StatusTypeDef InitPower()
+{
+	if (pwrDriver.Init() != HAL_OK) {
+		for (int i = 0; i < 100; ++i) {
+			indPins.status.Write(true);
+			indPins.struggleBus.Write(true);
+			if (pwrDriver.Init() == HAL_OK) {
+				indPins.status.Write(false);
+				indPins.struggleBus.Write(false);
+				break;
+			}
+			HAL_Delay(1);
+		}
 	}
 
-	if (HAL_TIM_Base_Start_IT(h_tim_temp) != HAL_OK) {
-		return HAL_ERROR;
-	}
+	if (pwrDriver.FoundPDOMatch()) {
+		if (pwrDriver.SendRequestedPDO() != HAL_OK) {
+			return HAL_ERROR;
+		}
 
+		if (pwrDriver.SetThermistorValues() != HAL_OK) {
+			return HAL_ERROR;
+		}
+
+		if (pwrDriver.SetOverTemp(overTempValue) != HAL_OK) {
+			return HAL_ERROR;
+		}
+
+		lighting.SetSelectedPDO(pwrDriver.GetSelectedPDO());
+	}
 	return HAL_OK;
 }
 
-void Main()
-{
-	if (maxBrightPin.Read(0)) {
-		maxBrightEnable = !maxBrightEnable;
-//		if (!debounce) {
-//			maxBrightEnable = !maxBrightEnable;
-//			StartDebounce();
-//		}
-	}
+//void OverTempCheck()
+//{
+	// OLD
+//	pcbTemp = pwrDriver.GetMeasuredValuesPtr()->temp;
+//	if (!lightsEnable) return;
+//	if (pcbTemp > normTempValue) {
+//		derateTemp = true;
+//	} else {
+//		derateTemp = false;
+//	}
+//	if (pcbTemp > overTempValue) {
+//		overTemp = true;
+//		derateTemp = false;
+//	}
+//	if (overTemp && pcbTemp < normTempValue) {
+//		overTemp = false;
+//	}
+//}
 
-	if (HAL_ADC_Start(h_adc) == HAL_OK) {
-		HAL_ADC_PollForConversion(h_adc, 100);
-		potPosition = (uint16_t)HAL_ADC_GetValue(h_adc);
-	}
+//void StartDebounce()
+//{
+//	debounce = true;
+//	HAL_TIM_Base_Start_IT(h_tim_debounce);
+//}
+//
+//// Not sure how well this will work.
+//void CalcOverTempDerate()
+//{
+//	double tempOffset = (pcbTemp - normTempValue) / overTempValue;
+//	if (tempOffset < 0) return;
+//	temp -= tempOffset;
+//	if (temp < 0) temp = 0;
+//	else if (temp > 1) temp = 1;
+//}
 
-	ControlLighting();
-
-	maxBrightIndPin.Write(maxBrightEnable);
-	statusIndPin.Write(lightsEnable);
-
-	if (checkTemp) {
-		pwrDriver.GetTemp();
-		checkTemp = false;
-		OverTempCheck();
-	}
-
-	HAL_Delay(1);
-}
+//void ControlLighting()
+//{
+//	if (!lightsEnable) {
+////		SetAllLights(0);
+//		lighting.LightsOFF();
+//		return;
+//	}
+//
+//	if (maxBrightEnable) {
+////		SetMaxBrightness();
+//		lighting.ToggleMaxBrightness();
+//		return;
+//	}
+//
+//	lighting.SetPotBrightness(potPosition);
+//
+////	temp = (double)potPosition / UINT12_MAXF;
+////	if (overTemp) {
+////		temp = temp / 0.8;
+////	} else if (derateTemp) {
+////		CalcOverTempDerate();
+////	}
+////	SetAllLights((uint16_t)(temp * UINT16_MAX));
+//
+//}

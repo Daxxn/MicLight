@@ -1,14 +1,31 @@
 /*
- * Utils.h
+ * Pins.h
  *
- *  Created on: Feb 12, 2023
+ *  Created on: Dec 17, 2024
  *      Author: Daxxn
  */
 
-#ifndef INC_UTILS_H_
-#define INC_UTILS_H_
+#ifndef INC_PINS_H_
+#define INC_PINS_H_
 
-#include "stm32f0xx_hal_gpio_ex.h"
+#ifdef STM32F412Vx
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_def.h"
+#endif
+
+#ifdef STM32F413xx
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_def.h"
+#endif
+
+#ifdef STM32F303xC
+#include "stm32f3xx_hal.h"
+#include "stm32f3xx_hal_def.h"
+#endif
+
+#ifdef STM32F072xB
+#include "stm32f0xx_hal.h"
+#endif
 
 typedef enum {
 	// Because ACTIVE_HIGH is assigned 0, it sets the default sigal low.
@@ -52,7 +69,7 @@ struct Pin
 	};
 
 	void Write(GPIO_PinState state) {
-		if (this->isOutput)
+		if (this->isOutput && this->state != state)
 		{
 			this->state = state;
 			HAL_GPIO_WritePin(this->port, this->pin, (GPIO_PinState)(state ^ this->defaultState));
@@ -101,5 +118,30 @@ private:
 	bool isOutput = true;
 };
 
+struct PWMPin
+{
+public:
+	PWMPin() { };
+	PWMPin(TIM_HandleTypeDef* timerHandle, uint16_t channel) {
+		this->timerHandle = timerHandle;
+		this->channel = channel;
+	};
+	HAL_StatusTypeDef Init() {
+		return HAL_TIM_PWM_Start(this->timerHandle, this->channel);
+	};
+	HAL_StatusTypeDef DeInit() {
+		return HAL_TIM_PWM_Stop(this->timerHandle, this->channel);
+	};
+	void SetPWM(uint16_t value) {
+		__HAL_TIM_SET_COMPARE(this->timerHandle, this->channel, value);
+	};
+	void ResetPWM() {
+		__HAL_TIM_SET_COMPARE(this->timerHandle, this->channel, 0);
+	};
+private:
+	TIM_HandleTypeDef* timerHandle;
+	uint16_t channel = TIM_CHANNEL_1;
+};
+
 #endif /* __cplusplus */
-#endif /* INC_UTILS_H_ */
+#endif /* INC_PINS_H_ */

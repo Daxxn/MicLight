@@ -1,0 +1,28 @@
+../Core/Inc/Pins.h:71:7:void Pin::Write(GPIO_PinState)	3
+../Core/Inc/Pins.h:78:7:void Pin::Write(bool)	1
+../Core/Inc/Pins.h:129:20:HAL_StatusTypeDef PWMPin::Init()	1
+../Core/Inc/Pins.h:135:7:void PWMPin::SetPWM(uint16_t)	4
+C:\ST\STM32CubeIDE_1.11.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/c++/12.3.1/bits/std_abs.h:75:3:constexpr float std::abs(float)	1
+C:\ST\STM32CubeIDE_1.11.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130\tools\bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/include/c++/12.3.1/cmath:388:3:constexpr float std::pow(float, float)	1
+../Core/Inc/LightingManager.cpp:11:1:LightingManager::LightingManager(AP33772Driver*, PWMPin*, LightingIndicators*, AP33772_PDRequestObject*)	1
+../Core/Inc/LightingManager.cpp:19:1:LightingManager::~LightingManager()	1
+../Core/Inc/LightingManager.cpp:19:1:virtual LightingManager::~LightingManager()	1
+../Core/Inc/LightingManager.cpp:27:19:HAL_StatusTypeDef LightingManager::Init()	3
+../Core/Inc/LightingManager.cpp:39:6:void LightingManager::StatusInterrupt()	1
+../Core/Inc/LightingManager.cpp:44:6:void LightingManager::LightsON()	1
+../Core/Inc/LightingManager.cpp:50:6:void LightingManager::LightsOFF()	1
+../Core/Inc/LightingManager.cpp:56:6:void LightingManager::LightsToggle()	1
+../Core/Inc/LightingManager.cpp:62:6:void LightingManager::SetBrightness(float)	1
+../Core/Inc/LightingManager.cpp:68:6:void LightingManager::SetPotBrightness(uint16_t)	3
+../Core/Inc/LightingManager.cpp:78:6:void LightingManager::SetMcuTemperature(uint16_t)	1
+../Core/Inc/LightingManager.cpp:84:6:void LightingManager::ToggleMaxBrightness()	1
+../Core/Inc/LightingManager.cpp:90:6:void LightingManager::SetManualDerate(float)	1
+../Core/Inc/LightingManager.cpp:96:6:void LightingManager::SetSelectedPDO(AP33772_PDObject*)	4
+../Core/Inc/LightingManager.cpp:111:6:void LightingManager::UseTempDerate()	1
+../Core/Inc/LightingManager.cpp:117:6:void LightingManager::SetMaxTemperature(float)	1
+../Core/Inc/LightingManager.cpp:123:6:void LightingManager::SetMeasurementsPtr(AP33772_MeasuredValues*)	1
+../Core/Inc/LightingManager.cpp:128:6:void LightingManager::CalcSupplyDerate()	3
+../Core/Inc/LightingManager.cpp:143:6:void LightingManager::CalcDerate()	3
+../Core/Inc/LightingManager.cpp:164:6:void LightingManager::SetLEDs()	4
+../Core/Inc/LightingManager.cpp:177:6:void LightingManager::Update()	4
+../Core/Inc/LightingManager.cpp:195:7:static float LightingManager::InvertScale(float)	1

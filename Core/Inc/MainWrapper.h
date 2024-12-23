@@ -18,6 +18,8 @@ HAL_StatusTypeDef Init(
 		TIM_HandleTypeDef *htim3,
 		TIM_HandleTypeDef *htim7,
 		TIM_HandleTypeDef *htim14,
+		TIM_HandleTypeDef *htim15,
+		TIM_HandleTypeDef *htim16,
 		I2C_HandleTypeDef *hi2c2
 	);
 
