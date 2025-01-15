@@ -1,0 +1,5 @@
+../Core/Inc/StateManager.cpp:10:1:StateManager::StateManager(LightingManager*, UsbManager*)	1
+../Core/Inc/StateManager.cpp:16:1:StateManager::~StateManager()	1
+../Core/Inc/StateManager.cpp:16:1:virtual StateManager::~StateManager()	1
+../Core/Inc/StateManager.cpp:22:19:HAL_StatusTypeDef StateManager::Init()	2
+../Core/Inc/StateManager.cpp:32:6:void StateManager::Update()	2

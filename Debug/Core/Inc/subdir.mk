@@ -6,14 +6,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../Core/Inc/LightingManager.cpp \
+../Core/Inc/StateManager.cpp \
 ../Core/Inc/UsbManager.cpp 
 
 OBJS += \
 ./Core/Inc/LightingManager.o \
+./Core/Inc/StateManager.o \
 ./Core/Inc/UsbManager.o 
 
 CPP_DEPS += \
 ./Core/Inc/LightingManager.d \
+./Core/Inc/StateManager.d \
 ./Core/Inc/UsbManager.d 
 
 
@@ -24,7 +27,7 @@ Core/Inc/%.o Core/Inc/%.su Core/Inc/%.cyclo: ../Core/Inc/%.cpp Core/Inc/subdir.m
 clean: clean-Core-2f-Inc
 
 clean-Core-2f-Inc:
-	-$(RM) ./Core/Inc/LightingManager.cyclo ./Core/Inc/LightingManager.d ./Core/Inc/LightingManager.o ./Core/Inc/LightingManager.su ./Core/Inc/UsbManager.cyclo ./Core/Inc/UsbManager.d ./Core/Inc/UsbManager.o ./Core/Inc/UsbManager.su
+	-$(RM) ./Core/Inc/LightingManager.cyclo ./Core/Inc/LightingManager.d ./Core/Inc/LightingManager.o ./Core/Inc/LightingManager.su ./Core/Inc/StateManager.cyclo ./Core/Inc/StateManager.d ./Core/Inc/StateManager.o ./Core/Inc/StateManager.su ./Core/Inc/UsbManager.cyclo ./Core/Inc/UsbManager.d ./Core/Inc/UsbManager.o ./Core/Inc/UsbManager.su
 
 .PHONY: clean-Core-2f-Inc
 

@@ -1,4 +1,5 @@
 "./Core/Inc/LightingManager.o"
+"./Core/Inc/StateManager.o"
 "./Core/Inc/UsbManager.o"
 "./Core/Src/AP33772Driver.o"
 "./Core/Src/LightingControl.o"

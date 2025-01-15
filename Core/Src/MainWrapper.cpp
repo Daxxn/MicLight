@@ -96,9 +96,6 @@ void ExtInterruptCallback(uint16_t pin)
 		case I2C_INT_Pin:
 			lighting.StatusInterrupt();
 			break;
-//		case USB_OVER_VOLT_Pin:
-//			lightsEnable = false;
-//			break;
 		default:
 			break;
 	}
@@ -116,10 +113,6 @@ void TimerElapsedCallback(TIM_HandleTypeDef *htim)
 		readData = true;
 	}
 }
-//static void OverTempCheck();
-//static void StartDebounce();
-//static void CalcOverTempDerate();
-//static void ControlLighting();
 
 HAL_StatusTypeDef Init(
 		ADC_HandleTypeDef *hadc,
